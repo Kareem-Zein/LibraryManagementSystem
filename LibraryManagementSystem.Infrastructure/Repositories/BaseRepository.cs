@@ -1,5 +1,5 @@
-﻿using LibraryManagementSystem.Domain.Common;
-using LibraryManagementSystem.Infrastructure.Interfaces;
+﻿using LibraryManagementSystem.Application.Interfaces.Repositories;
+using LibraryManagementSystem.Domain.Common;
 using LibraryManagementSystem.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 

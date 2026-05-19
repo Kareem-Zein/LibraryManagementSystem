@@ -1,4 +1,6 @@
-using LibraryManagementSystem.Infrastructure.Interfaces;
+using LibraryManagementSystem.Application.Interfaces.Repositories;
+using LibraryManagementSystem.Application.Interfaces.Services;
+using LibraryManagementSystem.Application.Services.Users;
 using LibraryManagementSystem.Infrastructure.Persistence;
 using LibraryManagementSystem.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +14,7 @@ builder.Services.AddDbContext<LibraryDbContext>(options =>
 });
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddControllers();
 
 var app = builder.Build();
