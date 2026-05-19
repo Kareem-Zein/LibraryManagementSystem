@@ -1,6 +1,7 @@
 ﻿using LibraryManagementSystem.Application.DTOs.Response;
 using LibraryManagementSystem.Application.DTOs.Response.Users;
 using LibraryManagementSystem.Application.DTOs.Service.Users;
+using LibraryManagementSystem.Application.Interfaces;
 using LibraryManagementSystem.Application.Interfaces.Repositories;
 using LibraryManagementSystem.Application.Interfaces.Services;
 
@@ -9,10 +10,12 @@ namespace LibraryManagementSystem.Application.Services.Users
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepo;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public UserService(IUserRepository repo)
+        public UserService(IUserRepository repo, IUnitOfWork unitOfWork)
         {
             _userRepo = repo;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<ResponseMessage<UserResponse>> CreateAsync(CreateUser user, CancellationToken cancellationToken = default)
@@ -30,6 +33,8 @@ namespace LibraryManagementSystem.Application.Services.Users
             };
 
             await _userRepo.AddAsync(newUser, cancellationToken);
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return ResponseMessage<UserResponse>.Created(new UserResponse
             {

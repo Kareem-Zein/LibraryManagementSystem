@@ -11,12 +11,12 @@ namespace LibraryManagementSystem.Infrastructure.Repositories
 
         public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
         {
-            return await DbContext.Users.FirstOrDefaultAsync(u => u.Email.Equals(email, StringComparison.InvariantCultureIgnoreCase), cancellationToken);
+            return await DbContext.Users.FirstOrDefaultAsync(u => u.Email.Equals(email), cancellationToken);
         }
 
         public async Task<bool> IsEmailExistsAsync(string email, CancellationToken cancellationToken = default)
         {
-            return await DbContext.Users.AnyAsync(u => u.Email.Equals(email, StringComparison.InvariantCultureIgnoreCase), cancellationToken);
+            return await DbContext.Users.AnyAsync(u => u.Email.Equals(email), cancellationToken);
         }
     }
 }

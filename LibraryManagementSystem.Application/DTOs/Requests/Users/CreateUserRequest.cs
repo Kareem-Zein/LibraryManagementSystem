@@ -1,5 +1,4 @@
 ﻿using LibraryManagementSystem.Domain.Enums;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -25,7 +24,7 @@ namespace LibraryManagementSystem.Application.DTOs.Requests.Users
 
 
         [Column(TypeName = "varchar(500)")]
-        [PasswordPropertyText]
+        [StringLength(500, MinimumLength = 8, ErrorMessage = "Password length error")]
         public string Password { set; get; } = null!;
     }
 }
