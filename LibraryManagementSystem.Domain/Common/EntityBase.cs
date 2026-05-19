@@ -5,9 +5,10 @@ namespace LibraryManagementSystem.Domain.Common
     public class EntityBase
     {
         [Key]
-        public Guid Id { set; get; }
+        public Guid Id { set; get; } = Guid.CreateVersion7();
 
-        public DateTime CreatedAt { set; get; }
-        public DateTime LastUpdatedAt { set; get; }
+        public DateTime CreatedAtUtc { set; get; } = DateTime.UtcNow;
+
+        public DateTime? LastUpdatedAtUtc { set; get; } = null;
     }
 }
