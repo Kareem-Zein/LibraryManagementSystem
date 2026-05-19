@@ -1,3 +1,4 @@
+using LibraryManagementSystem.Application.DTOs.Response;
 using LibraryManagementSystem.Application.Interfaces;
 using LibraryManagementSystem.Application.Interfaces.Repositories;
 using LibraryManagementSystem.Application.Interfaces.Services;
@@ -5,6 +6,7 @@ using LibraryManagementSystem.Application.Services.Users;
 using LibraryManagementSystem.Infrastructure;
 using LibraryManagementSystem.Infrastructure.Persistence;
 using LibraryManagementSystem.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,7 +21,15 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var error = context.ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).First();
+        var response = ResponseMessage<object>.Failure(error, System.Net.HttpStatusCode.BadRequest);
+        return new BadRequestObjectResult(response);
+    };
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
