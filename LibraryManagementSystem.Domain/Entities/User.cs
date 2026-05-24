@@ -22,5 +22,7 @@ namespace LibraryManagementSystem.Domain.Entities
         public string PasswordHash { set; get; } = null!;
 
         public bool IsActive { set; get; } = false;
+
+        public List<RefreshToken> RefreshTokens { set; get; } = new List<RefreshToken>();
     }
 }

@@ -11,23 +11,30 @@ namespace LibraryManagementSystem.WebAPI.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
-        public UsersController(IUserService service) 
+        public UsersController(IUserService service)
         {
             _userService = service;
         }
 
-        [HttpPost]
-        public async Task<ActionResult<ResponseMessage<UserResponse>>> CreateUser(CreateUserRequest data, CancellationToken cancellationToken)
+        [HttpPost("register")]
+        public async Task<ActionResult<ResponseMessage<CreateUserResponse>>> CreateUser(CreateUserRequest data, CancellationToken cancellationToken)
         {
-            var response = await _userService.CreateAsync(new Application.DTOs.Service.Users.CreateUser
-            {
-                Email = data.Email,
-                FirstName = data.FirstName,
-                LastName = data.LastName,
-                Password  = data.Password,
-                Type = data.Type
-            });
+            var response = await _userService.CreateAsync(data);
 
+            return StatusCode((int)response.StatusCode, response);
+        }
+
+        [HttpPost("login")]
+        public async Task<ActionResult<ResponseMessage<LoginUserResponse>>> LoginUser(LoginUserRequest data, CancellationToken cancellationToken)
+        {
+            var response = await _userService.LoginAsync(data);
+            return StatusCode((int)response.StatusCode, response);
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<ActionResult<ResponseMessage<LoginUserResponse>>> RefreshToken(string refreshToken, CancellationToken cancellationToken)
+        {
+            var response = await _userService.RefreshTokenAsync(refreshToken, cancellationToken);
             return StatusCode((int)response.StatusCode, response);
         }
     }

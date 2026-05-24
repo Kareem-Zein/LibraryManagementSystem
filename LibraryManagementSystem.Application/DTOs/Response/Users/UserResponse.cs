@@ -2,7 +2,7 @@
 
 namespace LibraryManagementSystem.Application.DTOs.Response.Users
 {
-    public class UserResponse
+    public class CreateUserResponse
     {
         public string FirstName { set; get; } = null!;
         public string LastName { set; get; } = null!;

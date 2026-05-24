@@ -64,5 +64,27 @@ namespace LibraryManagementSystem.Application.DTOs.Response
                 Data = default
             };
         }
+
+        public static ResponseMessage<T> InternalError(string message = "Internal server error")
+        {
+            return new ResponseMessage<T>
+            {
+                Message = message,
+                IsSuccess = false,
+                StatusCode = HttpStatusCode.InternalServerError,
+                Data = default
+            };
+        }
+
+        public static ResponseMessage<T> Unauthorized(string message = "Unauthorized")
+        {
+            return new ResponseMessage<T>
+            {
+                Message = message,
+                IsSuccess = false,
+                StatusCode = HttpStatusCode.Unauthorized,
+                Data = default
+            };
+        }
     }
 }

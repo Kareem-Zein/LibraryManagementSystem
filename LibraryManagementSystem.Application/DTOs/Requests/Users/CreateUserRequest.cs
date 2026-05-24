@@ -22,8 +22,6 @@ namespace LibraryManagementSystem.Application.DTOs.Requests.Users
 
         public UserType Type { set; get; }
 
-
-        [Column(TypeName = "varchar(500)")]
         [StringLength(500, MinimumLength = 8, ErrorMessage = "Password length error")]
         public string Password { set; get; } = null!;
     }

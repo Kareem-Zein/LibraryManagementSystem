@@ -7,6 +7,7 @@ namespace LibraryManagementSystem.Infrastructure.Persistence
     public class LibraryDbContext : DbContext
     {
         public DbSet<User> Users => Set<User>();
+        public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
         public LibraryDbContext(DbContextOptions<LibraryDbContext> options)
             : base(options)

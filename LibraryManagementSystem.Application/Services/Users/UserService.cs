@@ -1,6 +1,6 @@
-﻿using LibraryManagementSystem.Application.DTOs.Response;
+﻿using LibraryManagementSystem.Application.DTOs.Requests.Users;
+using LibraryManagementSystem.Application.DTOs.Response;
 using LibraryManagementSystem.Application.DTOs.Response.Users;
-using LibraryManagementSystem.Application.DTOs.Service.Users;
 using LibraryManagementSystem.Application.Interfaces;
 using LibraryManagementSystem.Application.Interfaces.Repositories;
 using LibraryManagementSystem.Application.Interfaces.Services;
@@ -11,17 +11,19 @@ namespace LibraryManagementSystem.Application.Services.Users
     {
         private readonly IUserRepository _userRepo;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ITokenService _tokenService;
 
-        public UserService(IUserRepository repo, IUnitOfWork unitOfWork)
+        public UserService(IUserRepository repo, IUnitOfWork unitOfWork, ITokenService tokenService)
         {
             _userRepo = repo;
             _unitOfWork = unitOfWork;
+            _tokenService = tokenService;
         }
 
-        public async Task<ResponseMessage<UserResponse>> CreateAsync(CreateUser user, CancellationToken cancellationToken = default)
+        public async Task<ResponseMessage<CreateUserResponse>> CreateAsync(CreateUserRequest user, CancellationToken cancellationToken = default)
         {
             if (await _userRepo.IsEmailExistsAsync(user.Email))
-                return ResponseMessage<UserResponse>.Conflict("Email already exists");
+                return ResponseMessage<CreateUserResponse>.Conflict("Email already exists");
 
             var newUser = new Domain.Entities.User
             {
@@ -36,13 +38,61 @@ namespace LibraryManagementSystem.Application.Services.Users
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return ResponseMessage<UserResponse>.Created(new UserResponse
+            return ResponseMessage<CreateUserResponse>.Created(new CreateUserResponse
             {
                 FirstName = newUser.FirstName,
                 LastName = newUser.LastName,
                 Email = newUser.Email,
                 Type = newUser.Type
             });
+        }
+
+        public async Task<ResponseMessage<LoginUserResponse>> LoginAsync(LoginUserRequest user, CancellationToken cancellationToken = default)
+        {
+            var existingUser = await _userRepo.GetByEmailAsync(user.Email, cancellationToken);
+
+            if (existingUser is null)
+                return ResponseMessage<LoginUserResponse>.Unauthorized("Invalid email or password.");
+
+            if (!BCrypt.Net.BCrypt.Verify(user.Password, existingUser.PasswordHash))
+                return ResponseMessage<LoginUserResponse>.Unauthorized("Invalid email or password.");
+
+            var accessToken = _tokenService.GenerateAccessToken(existingUser);
+            var refreshToken = _tokenService.GenerateRefreshToken();
+
+            var result = await _unitOfWork.ExecuteInTransactionAsync(async Task<bool> (ct) =>
+            {
+                _tokenService.RevokeAllUserRefreshTokens(existingUser.Id);
+                await _tokenService.SaveRefreshToken(new Domain.Entities.RefreshToken
+                {
+                    UserId = existingUser.Id,
+                    Token = refreshToken,
+                    Id = Guid.CreateVersion7(),
+                    ExpireAtUTC = DateTime.UtcNow.AddDays(30)
+                });
+
+                return true;
+            }, cancellationToken);
+
+            if (!result)
+                return ResponseMessage<LoginUserResponse>.InternalError();
+
+            return new ResponseMessage<LoginUserResponse>
+            {
+                IsSuccess = true,
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Message = "Login successful",
+                Data = new LoginUserResponse
+                {
+                    Token = accessToken,
+                    RefreshToken = refreshToken
+                }
+            };
+        }
+
+        public async Task<ResponseMessage<LoginUserResponse>> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
+        {
+            return await _tokenService.RefreshToken(refreshToken, cancellationToken);
         }
     }
 }
