@@ -2,7 +2,9 @@
 using LibraryManagementSystem.Application.DTOs.Response;
 using LibraryManagementSystem.Application.DTOs.Response.Users;
 using LibraryManagementSystem.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace LibraryManagementSystem.WebAPI.Controllers
 {
@@ -35,6 +37,14 @@ namespace LibraryManagementSystem.WebAPI.Controllers
         public async Task<ActionResult<ResponseMessage<LoginUserResponse>>> RefreshToken(string refreshToken, CancellationToken cancellationToken)
         {
             var response = await _userService.RefreshTokenAsync(refreshToken, cancellationToken);
+            return StatusCode((int)response.StatusCode, response);
+        }
+
+        [Authorize]
+        [HttpGet("profile")]
+        public async Task<ActionResult<ResponseMessage<UserProfileResponse>>> Profile(CancellationToken cancellationToken)
+        {
+            var response = await _userService.GetProfile(HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier), cancellationToken);
             return StatusCode((int)response.StatusCode, response);
         }
     }

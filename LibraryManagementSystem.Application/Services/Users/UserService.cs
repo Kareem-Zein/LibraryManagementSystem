@@ -4,6 +4,7 @@ using LibraryManagementSystem.Application.DTOs.Response.Users;
 using LibraryManagementSystem.Application.Interfaces;
 using LibraryManagementSystem.Application.Interfaces.Repositories;
 using LibraryManagementSystem.Application.Interfaces.Services;
+using System.Security.Claims;
 
 namespace LibraryManagementSystem.Application.Services.Users
 {
@@ -45,6 +46,24 @@ namespace LibraryManagementSystem.Application.Services.Users
                 Email = newUser.Email,
                 Type = newUser.Type
             });
+        }
+
+        public async Task<ResponseMessage<UserProfileResponse>> GetProfile(Claim? claim, CancellationToken cancellationToken)
+        {
+            if (claim is null)
+                return ResponseMessage<UserProfileResponse>.Unauthorized();
+
+            var userId = Guid.Parse(claim.Value);
+
+            if (userId == Guid.Empty)
+                return ResponseMessage<UserProfileResponse>.Unauthorized();
+
+            var user = await _userRepo.GetByIdAsync(userId);
+
+            if (user is null)
+                return ResponseMessage<UserProfileResponse>.Unauthorized();
+
+            return ResponseMessage<UserProfileResponse>.Success(new UserProfileResponse(user));
         }
 
         public async Task<ResponseMessage<LoginUserResponse>> LoginAsync(LoginUserRequest user, CancellationToken cancellationToken = default)
