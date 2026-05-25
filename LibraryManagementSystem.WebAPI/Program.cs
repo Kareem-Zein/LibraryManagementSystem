@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 var jwtSection = builder.Configuration.GetSection("Jwt");
@@ -30,6 +31,35 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = jwtSection["Audience"],
             IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtSection["Key"]!)),
             ClockSkew = TimeSpan.Zero
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var userService = context.HttpContext.RequestServices.GetRequiredService<IUserService>();
+                var userId = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (string.IsNullOrEmpty(userId))
+                {
+                    context.Fail("Invalid token claims");
+                    return;
+                }
+
+                var user = await userService.GetByIdAsync(Guid.Parse(userId), u => u.RefreshTokens);
+
+                if (user is null)
+                {
+                    context.Fail("User not found");
+                    return;
+                }
+
+                if  (user.RefreshTokens.All(rt => rt.IsRevoked))
+                {
+                    context.Fail("Invalid token");
+                    return;
+                }
+            }
         };
     });
 

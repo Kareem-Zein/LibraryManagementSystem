@@ -1,10 +1,12 @@
 ﻿using LibraryManagementSystem.Domain.Common;
+using System.Linq.Expressions;
 
 namespace LibraryManagementSystem.Application.Interfaces.Repositories;
 
 public interface IRepositoryBase<T> where T : EntityBase
 {
     Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default, params Expression<Func<T, object>>[] includes);
     Task AddAsync(T entity, CancellationToken cancellationToken = default);
     Task<bool> IsExistAsync(Guid id, CancellationToken cancellationToken = default);
 

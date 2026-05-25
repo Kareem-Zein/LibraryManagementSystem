@@ -47,5 +47,13 @@ namespace LibraryManagementSystem.WebAPI.Controllers
             var response = await _userService.GetProfile(HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier), cancellationToken);
             return StatusCode((int)response.StatusCode, response);
         }
+
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<ActionResult<LogoutUserResponse>> Logout(CancellationToken cancellationToken)
+        {
+            var response = await _userService.LogoutAsync(HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier), cancellationToken);
+            return StatusCode((int)response.StatusCode, response);
+        }
     }
 }

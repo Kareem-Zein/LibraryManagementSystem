@@ -4,6 +4,8 @@ using LibraryManagementSystem.Application.DTOs.Response.Users;
 using LibraryManagementSystem.Application.Interfaces;
 using LibraryManagementSystem.Application.Interfaces.Repositories;
 using LibraryManagementSystem.Application.Interfaces.Services;
+using LibraryManagementSystem.Domain.Entities;
+using System.Linq.Expressions;
 using System.Security.Claims;
 
 namespace LibraryManagementSystem.Application.Services.Users
@@ -47,6 +49,8 @@ namespace LibraryManagementSystem.Application.Services.Users
                 Type = newUser.Type
             });
         }
+
+        public async Task<User?> GetByIdAsync(Guid guid, params Expression<Func<User, object>>[] includes) => await _userRepo.GetByIdAsync(guid, default, includes);
 
         public async Task<ResponseMessage<UserProfileResponse>> GetProfile(Claim? claim, CancellationToken cancellationToken)
         {
@@ -107,6 +111,23 @@ namespace LibraryManagementSystem.Application.Services.Users
                     RefreshToken = refreshToken
                 }
             };
+        }
+
+        public async Task<ResponseMessage<LogoutUserResponse>> LogoutAsync(Claim? claim, CancellationToken cancellationToken)
+        {
+            if (claim is null)
+                return ResponseMessage<LogoutUserResponse>.Unauthorized();
+
+            var userId = Guid.Parse(claim.Value);
+
+            if (userId == Guid.Empty)
+                return ResponseMessage<LogoutUserResponse>.Unauthorized();
+
+            _tokenService.RevokeAllUserRefreshTokens(userId);
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            return ResponseMessage<LogoutUserResponse>.Success(new LogoutUserResponse(), "Logout successful");
         }
 
         public async Task<ResponseMessage<LoginUserResponse>> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
